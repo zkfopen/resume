@@ -1,25 +1,27 @@
-SRC = $(wildcard *.tex)
+# TinyTeX on macOS; other distributions can override TEXBIN.
+TEXBIN ?= $(HOME)/Library/TinyTeX/bin/universal-darwin
+export PATH := $(TEXBIN):$(PATH)
+MAIN ?= resume-zh_CN.tex
+OUTDIR ?= build
+LATEXMK ?= latexmk
+FLAGS = -xelatex -synctex=1 -interaction=nonstopmode -halt-on-error -file-line-error -outdir=$(OUTDIR)
 
-PDFS = $(SRC:.tex=.pdf)
+.PHONY: all pdf zh_CN watch preview clean distclean
+all: pdf
 
-all:	clean pdf
+pdf zh_CN:
+	$(LATEXMK) $(FLAGS) $(MAIN)
 
-en:	clean xelatex resume.tex
+# Save the source to rebuild; stop with Ctrl+C.
+watch:
+	$(LATEXMK) $(FLAGS) -pvc -view=none $(MAIN)
 
-zh_CN:	clean xelatex resume-zh_CN.tex
+preview: pdf
+	open "$(OUTDIR)/$(basename $(MAIN)).pdf"
 
-pdf:	clean $(PDFS)
-
-%.pdf:  %.tex
-	xelatex $<
-
-ifeq ($(OS),Windows_NT)
-  # on Windows
-  RM = cmd //C del
-else
-  # on Unix/Linux
-  RM = rm -f
-endif
-
+# Keep the PDF; never remove PDFs from the repository root.
 clean:
-	$(RM) *.log *.aux *.bbl *.blg *.synctex.gz *.out *.toc *.lof *.idx *.ilg *.ind *.pdf
+	$(LATEXMK) -c -outdir=$(OUTDIR) $(MAIN)
+
+distclean:
+	$(LATEXMK) -C -outdir=$(OUTDIR) $(MAIN)
