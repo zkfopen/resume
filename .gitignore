@@ -37,7 +37,8 @@ jspm_packages
 .node_repl_history
 
 # Local LaTeX build artifacts
-/build/
+/build/*
+!/build/resume-zh_CN.pdf
 *.aux
 *.out
 *.fls
