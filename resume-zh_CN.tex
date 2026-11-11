@@ -38,7 +38,7 @@
 
 \begin{itemize}
 
-  \item \textbf{模型部署：}vLLM-Ascend、SGLang、MindIE；昇腾 910B/910C/950PR；量化模型、TP/DP、PD 分离。
+  \item \textbf{模型部署：}vLLM-Ascend、SGLang、MindIE；昇腾 910B/910C/950PR；W8A8 等量化模型部署、PD 分离、DP/TP/EP。
 
   \item \textbf{推理性能：}EvalScope perf、TTFT/TPOT、吞吐与容量分析；长上下文、前缀缓存、CPU KV 回载、UCM。
 
@@ -56,7 +56,7 @@
 
 \begin{itemize}
 
-  \item \textbf{模型部署与交付：}负责 GLM、DeepSeek、Qwen 等模型的部署适配与方案选型，以昇腾 910B/910C/950PR 为主，面向中关村实验室、山东移动、中石化等客户完成模型部署上线及服务故障排查。
+  \item \textbf{模型部署与交付：}负责 GLM、DeepSeek、Qwen 等模型的部署适配与方案选型，以昇腾 910B/910C/950PR 为主，面向中关村实验室、山东移动、中石化等客户完成模型部署上线、推理调优及服务故障排查。
 
   \item \textbf{MaaS 平台研发：}主导资源池、模型用量统计与算力监控等核心模块建设，完成 ARM64 适配及通算/智算双集群部署，打通模型实例下发链路；完成模型调用向 NewAPI 的迁移，保障迁移期间业务连续性。
 
@@ -78,17 +78,19 @@
 
 \section{重点项目}
 
-\entry{中关村实验室 - 大模型部署与长上下文推理优化}{项目技术负责人}{2026.06—至今}
+\entry{中关村实验室 - 大模型 PD 分离部署与长上下文性能验证}{项目技术负责人}{2026.06—至今}
 
-面向昇腾 910C 长上下文推理场景，负责 GLM-5.2、GLM-5.3、DeepSeek-V4-Pro 的 PD 分离部署、性能测试与问题定位。\par
+面向昇腾 910C 长上下文推理场景，开展 GLM-5.2、GLM-5.3、DeepSeek-V4-Pro 模型部署工程化、PD 拓扑选型与缓存方案评估。\par
 
 \begin{itemize}
 
-  \item \textbf{部署工程化：}完成量化模型的 PD 分离部署，将 3P1D Docker 方案封装为 Helm Chart，通过 Argo CD 同步部署配置并验证扩缩容。
+  \item \textbf{部署工程化：}在昇腾 910C 环境完成 GLM-5.2/5.3 量化模型的 PD 分离部署与 MaaS 上架，将 3P1D Docker 方案封装为 Helm Chart，通过 Argo CD 同步配置并验证扩缩容；完成 DeepSeek-V4-Pro 部署与问答验证。
 
-  \item \textbf{长上下文与容量验证：}使用 EvalScope perf 开展 128K 至约 1M 上下文、多并发及 PD 拓扑对比，定位 UCM/KV Cache 方案中的请求失败与性能回退；在约 973K 输入、8 并发条件下，优化版本累计完成 64 次请求，请求成功率 100\%，输出部署选型与并发配置建议。
+  \item \textbf{拓扑选型：}基于 EvalScope perf 开展长上下文与多并发测试；在约 512K 输入、TTFT＜30 秒及单路 Decode≥15 token/s 的目标下，对比验证 2P1D、1P1D 的并发承载能力，分别约为 16、8 并发，形成对应场景的拓扑与容量建议。
 
-  \item \textbf{部署排障与性能验证：}解决 Proxy 与 Prefill 端口冲突导致的服务启动与请求路由异常，完成 GLM-5.3 3P1D 部署验证；在 128K、16 并发、50\%/90\% 共享前缀条件下，测得平均 TTFT 约 3.5～8.5 秒、TPOT 约 47 毫秒。
+  \item \textbf{缓存方案评估：}对比 UCM 与合作方 KV Cache 优化版本：UCM 在 972.8K/8 并发下由全量失败变为 64/64 成功，但多数档位吞吐下降，判定收益有限；合作方版本在 786K/973K 下 TTFT 最大 223.07→23.48 秒、整体吞吐最大 12,601→60,941 tok/s，据此给出方案适用范围。
+
+  \item \textbf{排障与达标验证：}定位 Proxy 启动与请求分发异常，修复后由 1P1D 调整为 3P1D；GLM-5.3 在 1024K/4 并发/90\% 前缀下 TTFT 13.72 秒、TPOT 49.06ms，满足 $\leq$~40s/$\leq$~50ms 目标。
 
 \end{itemize}
 
@@ -100,11 +102,11 @@
 
 \begin{itemize}
 
-  \item \textbf{国产化 MaaS 建设：}完成 MaaS API、Infra 及配套组件的 ARM64 适配，建设通算、智算双 Kubernetes 集群，打通模型下发与调用链路；为 GLM、DeepSeek、Qwen 等 13 个去重模型制定部署方案，将 TTS、ASR 服务封装为 Helm Chart 纳管至 MaaS。
+  \item \textbf{国产化 MaaS 建设：}完成 MaaS API、Infra 及配套组件的 ARM64 适配，建设通算、智算双 Kubernetes 集群并打通模型实例下发与调用链路；为 GLM、DeepSeek、Qwen 等 13 个去重模型制定部署方案并指导现场实施，将 TTS、ASR 服务封装为 Helm Chart 纳管至 MaaS。
 
-  \item \textbf{Flash 部署与压测：}基于 vLLM-Ascend 制定 GLM-5.3-Flash-W8A8 的 910C 单机 TP16、910B 单机 TP8 及双机 DP2×TP8 部署方案，实现部署脚本化与 EvalScope perf 自动压测，完成不同硬件与部署拓扑的性能对比。
+  \item \textbf{Flash 部署与压测：}基于 vLLM-Ascend 制定 GLM-5.3-Flash-W8A8 的 910C 单机 TP16、910B 单机 TP8 及双机 1P1D 部署方案（P 节点：DP1/TP1/PCP8；D 节点：DP4/TP2/PCP1），实现部署脚本化与 EvalScope perf 自动压测，完成不同硬件与拓扑的性能对比。
 
-  \item \textbf{KV Cache 性能验证：}对比共享前缀、CPU KV 回载及优化版本；在 910B、16K 前缀受控测试中，验证缓存回载使 TTFT 从 4.14 秒降至 0.822 秒；在 910B 双机、512K 共享前缀输入、8 并发下，测得单路 Decode 超过 10 token/s。
+  \item \textbf{KV Cache 验证：}在 910B、16K 前缀受控测试中，验证 CPU KV Offloading 使 TTFT 从 4.14 秒降至 0.822 秒；在 910B 双机、512K 共享前缀输入、8 并发下，测得单路 Decode 超过 10 token/s。
 
 \end{itemize}
 
@@ -114,9 +116,9 @@
 
 \begin{itemize}
 
-  \item \textbf{模型与算力交付：}累计交付 50+ 去重模型，主导 GLM-4.7、DeepSeek-V3 部署与性能验证；将近 200 台裸金属算力服务器纳管至 Kubernetes，参与业务与昇腾算力集群拆分，制定节点下架、模型服务及对象存储迁移方案。
+  \item \textbf{模型与算力交付：}累计交付 50+ 个去重模型，主导 GLM-4.7、DeepSeek-V3 部署与性能验证；将近 200 台裸金属服务器纳管至 Kubernetes，参与业务与昇腾算力集群拆分，制定节点下架、模型服务及对象存储迁移方案。
 
-  \item \textbf{生产升级与保障：}负责 MaaS v2.0→v2.2 升级及代码、数据库和脚本迁移，通过演练、临时模型服务、网关切换与回滚准备保障升级，验证 5 个模型推理、2 个模型训练正常，验收无阻塞问题；定位 HCCL/RDMA 多机通信及 Kubernetes 故障，沉淀部署运维 SOP。
+  \item \textbf{生产升级与保障：}负责 MaaS v2.0→v2.2 升级及定制代码、数据库、脚本迁移，通过演练、临时模型服务、网关切换与回滚准备保障升级，完成 5 个模型推理、2 个模型训练验证，验收无阻塞问题；定位 HCCL/RDMA 多机通信及 Kubernetes 故障，沉淀部署运维 SOP。
 
 \end{itemize}
 
